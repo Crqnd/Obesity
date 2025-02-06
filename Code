@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# 1. Veri Setini Yükleme
+url = 'obesity.csv'  # Veri setinin dosya yolu
+df = pd.read_csv(url)
+
+# 2. Veri Keşfi ve Ön İşleme
+print(df.head())
+print(df.info())
+print(df.isnull().sum())  # Eksik değer kontrolü
+
+# Kategorik değişkenleri sayısal değerlere dönüştürme
+label_encoders = {}
+for column in df.select_dtypes(include=['object']).columns:
+    le = LabelEncoder()
+    df[column] = le.fit_transform(df[column])
+    label_encoders[column] = le
+
+# Hedef değişken ve özelliklerin ayrılması
+X = df.drop('NObeyesdad', axis=1)  # Özellikler
+y = df['NObeyesdad']  # Hedef değişken
+
+# 3. Veriyi Eğitim ve Test Setlerine Ayırma
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 4. Özellik Ölçeklendirme
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# 5. Lojistik Regresyon Modelini Eğitme
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+# 6. Model Değerlendirme
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Doğruluk Oranı: {accuracy:.2f}")
+print("Sınıflandırma Raporu:\n", classification_report(y_test, y_pred))
+print("Karışıklık Matrisi:\n", confusion_matrix(y_test, y_pred))
